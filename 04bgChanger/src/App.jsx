@@ -1,51 +1,81 @@
-import { useState } from "react"
+import React, { useState } from "react";
+import axios from "axios";
 
 function App() {
- const[color,setColor]=useState("lightblue")
+  const [path, setPath] = useState("");
+  const [duplicates, setDuplicates] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const handleScan = async () => {
+    if (!path.trim()) {
+      alert("Please enter a valid folder path.");
+      return;
+    }
+
+    setLoading(true);
+    setDuplicates([]);
+
+    try {
+      const response = await axios.post("/scan", {
+        path: path.trim(),
+      });
+
+      const { duplicates } = response.data;
+      if (duplicates.length === 0) {
+        alert("No duplicate files found!");
+      }
+      setDuplicates(duplicates);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to scan folder. Check if path is valid.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-   <div className="w-full h-screen duration-200"
-   style={{backgroundColor:color}}
-   >
-    
-   <div className="fixed flex flex-wrap justify-center bottom-12 inset-x-0 px-2">
-        <div className="flex flex-wrap justify-center gap-3 shadow-lg bg-white px-3 py-2 rounded-3xl">
-          <button
-          onClick={() => setColor("red")}
-          className="outline-none px-4 py-1 rounded-full text-white shadow-lg"
-          style={{backgroundColor: "red"}}
-          >Red</button>
+    <div className="min-h-screen p-6 bg-gray-50 text-gray-900">
+      <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow">
+        <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
+          🗂 Duplicate File Scanner
+        </h1>
 
-<button
-          onClick={() => setColor("orange")}
-          className="outline-none px-4 py-1 rounded-full text-white shadow-lg"
-          style={{backgroundColor: "orange"}}
-          >orange</button>
+        <input
+          type="text"
+          placeholder="Enter folder path (e.g., C:\\delete)"
+          value={path}
+          onChange={(e) => setPath(e.target.value)}
+          className="w-full p-3 border rounded-lg mb-4"
+        />
 
-<button
-          onClick={() => setColor("yellow")}
-          className="outline-none px-4 py-1 rounded-full text-white shadow-lg"
-          style={{backgroundColor: "yellow"}}
-          >yellow</button>
+        <button
+          onClick={handleScan}
+          disabled={loading}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
+        >
+          {loading ? "Scanning..." : "🔍 Scan Folder"}
+        </button>
 
-<button
-          onClick={() => setColor("pink")}
-          className="outline-none px-4 py-1 rounded-full text-white shadow-lg"
-          style={{backgroundColor: "pink"}}
-          >pink</button>
+        <div className="mt-6">
+          {duplicates.length > 0 && (
+            <>
+              <h2 className="text-xl font-semibold mb-2">🔁 Duplicate Files:</h2>
+              {duplicates.map((group, index) => (
+                <div key={index} className="mb-4">
+                  <h3 className="font-medium mb-1">Group {index + 1}</h3>
+                  <ul className="list-disc ml-6 text-sm text-gray-700">
+                    {group.map((file, idx) => (
+                      <li key={idx}>{file}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
     </div>
-   </div>
-   </div>
-   )
-   }
-  
+  );
+}
 
-
-export default App
-
-
-// onclick method expects a function 
-//it does not expect a return value
-//call back is a function that is passed to another function as an argument
-//it is executed after the completion of the function
-//useState is a hook that allows us to use state in functional components
+export default App;
